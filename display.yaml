@@ -160,6 +160,47 @@ globals:
     restore_value: no
     initial_value: "false"
 
+  # IP Address Storage (persisted across boots)
+  - id: plug1_ip_str
+    type: std::string
+    restore_value: yes
+    initial_value: '"192.168.68.76"'
+
+  - id: plug2_ip_str
+    type: std::string
+    restore_value: yes
+    initial_value: '"192.168.68.200"'
+
+  - id: plug3_ip_str
+    type: std::string
+    restore_value: yes
+    initial_value: '"192.168.68.201"'
+
+  - id: plug4_ip_str
+    type: std::string
+    restore_value: yes
+    initial_value: '"192.168.68.202"'
+
+  - id: plug5_ip_str
+    type: std::string
+    restore_value: yes
+    initial_value: '"192.168.68.203"'
+
+  - id: plug6_ip_str
+    type: std::string
+    restore_value: yes
+    initial_value: '"192.168.68.204"'
+
+  - id: plug7_ip_str
+    type: std::string
+    restore_value: yes
+    initial_value: '"192.168.68.205"'
+
+  - id: plug8_ip_str
+    type: std::string
+    restore_value: yes
+    initial_value: '"192.168.68.206"'
+
   # ================================
 switch:
   # CH422G backlight power
@@ -1480,6 +1521,20 @@ lvgl:
                     lv_obj_set_style_bg_color(id(btn_bl_on),   lv_color_hex(0x228B22), LV_PART_MAIN);
                     lv_obj_set_style_bg_color(id(btn_bl_auto), lv_color_hex(0x444444), LV_PART_MAIN);
                 - script.execute: register_activity
+
+        # IP Settings button
+        - button:
+            id: btn_ip_settings
+            x: 380
+            y: 386
+            width: 130
+            height: 50
+            bg_color: 0xFF8800
+            widgets: [{ label: { text: "IP Setup", align: center, text_font: font_small }}]
+            on_click:
+              then:
+                - script.execute: register_activity
+                - lvgl.page.show: ip_setup_page
 
         # main page clock (bottom right)
         # CLOCK POSITION ADJUSTMENT (moved down 5px)
@@ -4114,6 +4169,298 @@ lvgl:
                       char buf[24];
                       sprintf(buf, "OFF: %02d:%02d %s", h, m, ampm.c_str());
                       return std::string(buf);
+
+    # IP ADDRESS SETUP PAGE
+    - id: ip_setup_page
+      widgets:
+        # Background
+        - obj:
+            id: ip_bg
+            x: 0
+            y: 0
+            width: 800
+            height: 480
+            bg_color: 0x101830
+
+        # Title
+        - label:
+            id: lbl_ip_title
+            align: top_mid
+            y: 10
+            text: "IP Address Setup"
+            text_font: font_large
+            text_color: 0xFFFFFF
+
+        # Plug 1 IP
+        - label:
+            text: "Plug 1:"
+            x: 20
+            y: 60
+            text_color: 0xFFFFFF
+            text_font: font_small
+
+        - textarea:
+            id: ip1_text
+            x: 120
+            y: 55
+            width: 200
+            height: 35
+            one_line: true
+            placeholder_text: "192.168.68.76"
+            on_value:
+              then:
+                - lambda: |-
+                    id(plug1_ip_str) = text;
+                    ESP_LOGI("ip_setup", "Plug 1 IP set to: %s", id(plug1_ip_str).c_str());
+            on_click:
+              then:
+                - lvgl.keyboard.update:
+                    id: keyboard_ip
+                    mode: LV_KEYBOARD_MODE_TEXT_LOWER
+                    textarea: ip1_text
+
+        # Plug 2 IP
+        - label:
+            text: "Plug 2:"
+            x: 20
+            y: 100
+            text_color: 0xFFFFFF
+            text_font: font_small
+
+        - textarea:
+            id: ip2_text
+            x: 120
+            y: 95
+            width: 200
+            height: 35
+            one_line: true
+            placeholder_text: "192.168.68.200"
+            on_value:
+              then:
+                - lambda: |-
+                    id(plug2_ip_str) = text;
+                    ESP_LOGI("ip_setup", "Plug 2 IP set to: %s", id(plug2_ip_str).c_str());
+            on_click:
+              then:
+                - lvgl.keyboard.update:
+                    id: keyboard_ip
+                    mode: LV_KEYBOARD_MODE_TEXT_LOWER
+                    textarea: ip2_text
+
+        # Plug 3 IP
+        - label:
+            text: "Plug 3:"
+            x: 20
+            y: 140
+            text_color: 0xFFFFFF
+            text_font: font_small
+
+        - textarea:
+            id: ip3_text
+            x: 120
+            y: 135
+            width: 200
+            height: 35
+            one_line: true
+            placeholder_text: "192.168.68.201"
+            on_value:
+              then:
+                - lambda: |-
+                    id(plug3_ip_str) = text;
+                    ESP_LOGI("ip_setup", "Plug 3 IP set to: %s", id(plug3_ip_str).c_str());
+            on_click:
+              then:
+                - lvgl.keyboard.update:
+                    id: keyboard_ip
+                    mode: LV_KEYBOARD_MODE_TEXT_LOWER
+                    textarea: ip3_text
+
+        # Plug 4 IP
+        - label:
+            text: "Plug 4:"
+            x: 20
+            y: 180
+            text_color: 0xFFFFFF
+            text_font: font_small
+
+        - textarea:
+            id: ip4_text
+            x: 120
+            y: 175
+            width: 200
+            height: 35
+            one_line: true
+            placeholder_text: "192.168.68.202"
+            on_value:
+              then:
+                - lambda: |-
+                    id(plug4_ip_str) = text;
+                    ESP_LOGI("ip_setup", "Plug 4 IP set to: %s", id(plug4_ip_str).c_str());
+            on_click:
+              then:
+                - lvgl.keyboard.update:
+                    id: keyboard_ip
+                    mode: LV_KEYBOARD_MODE_TEXT_LOWER
+                    textarea: ip4_text
+
+        # Plug 5 IP
+        - label:
+            text: "Plug 5:"
+            x: 420
+            y: 60
+            text_color: 0xFFFFFF
+            text_font: font_small
+
+        - textarea:
+            id: ip5_text
+            x: 520
+            y: 55
+            width: 200
+            height: 35
+            one_line: true
+            placeholder_text: "192.168.68.203"
+            on_value:
+              then:
+                - lambda: |-
+                    id(plug5_ip_str) = text;
+                    ESP_LOGI("ip_setup", "Plug 5 IP set to: %s", id(plug5_ip_str).c_str());
+            on_click:
+              then:
+                - lvgl.keyboard.update:
+                    id: keyboard_ip
+                    mode: LV_KEYBOARD_MODE_TEXT_LOWER
+                    textarea: ip5_text
+
+        # Plug 6 IP
+        - label:
+            text: "Plug 6:"
+            x: 420
+            y: 100
+            text_color: 0xFFFFFF
+            text_font: font_small
+
+        - textarea:
+            id: ip6_text
+            x: 520
+            y: 95
+            width: 200
+            height: 35
+            one_line: true
+            placeholder_text: "192.168.68.204"
+            on_value:
+              then:
+                - lambda: |-
+                    id(plug6_ip_str) = text;
+                    ESP_LOGI("ip_setup", "Plug 6 IP set to: %s", id(plug6_ip_str).c_str());
+            on_click:
+              then:
+                - lvgl.keyboard.update:
+                    id: keyboard_ip
+                    mode: LV_KEYBOARD_MODE_TEXT_LOWER
+                    textarea: ip6_text
+
+        # Plug 7 IP
+        - label:
+            text: "Plug 7:"
+            x: 420
+            y: 140
+            text_color: 0xFFFFFF
+            text_font: font_small
+
+        - textarea:
+            id: ip7_text
+            x: 520
+            y: 135
+            width: 200
+            height: 35
+            one_line: true
+            placeholder_text: "192.168.68.205"
+            on_value:
+              then:
+                - lambda: |-
+                    id(plug7_ip_str) = text;
+                    ESP_LOGI("ip_setup", "Plug 7 IP set to: %s", id(plug7_ip_str).c_str());
+            on_click:
+              then:
+                - lvgl.keyboard.update:
+                    id: keyboard_ip
+                    mode: LV_KEYBOARD_MODE_TEXT_LOWER
+                    textarea: ip7_text
+
+        # Plug 8 IP
+        - label:
+            text: "Plug 8:"
+            x: 420
+            y: 180
+            text_color: 0xFFFFFF
+            text_font: font_small
+
+        - textarea:
+            id: ip8_text
+            x: 520
+            y: 175
+            width: 200
+            height: 35
+            one_line: true
+            placeholder_text: "192.168.68.206"
+            on_value:
+              then:
+                - lambda: |-
+                    id(plug8_ip_str) = text;
+                    ESP_LOGI("ip_setup", "Plug 8 IP set to: %s", id(plug8_ip_str).c_str());
+            on_click:
+              then:
+                - lvgl.keyboard.update:
+                    id: keyboard_ip
+                    mode: LV_KEYBOARD_MODE_TEXT_LOWER
+                    textarea: ip8_text
+
+        # On-screen Keyboard
+        - keyboard:
+            id: keyboard_ip
+            y: 230
+            width: 800
+            height: 200
+            mode: LV_KEYBOARD_MODE_TEXT_LOWER
+            textarea: ip1_text
+
+        # Save Button
+        - button:
+            id: btn_ip_save
+            x: 250
+            y: 420
+            width: 150
+            height: 45
+            bg_color: 0x228B22
+            widgets:
+              - label:
+                  text: "Save IPs"
+                  align: center
+                  text_font: font_small
+            on_click:
+              then:
+                - logger.log:
+                    format: "IP addresses saved"
+                    level: INFO
+                    tag: ip_setup
+                - lvgl.page.show: main_page
+
+        # Back Button
+        - button:
+            id: btn_ip_back
+            x: 420
+            y: 420
+            width: 150
+            height: 45
+            bg_color: 0x444444
+            widgets:
+              - label:
+                  text: "Back"
+                  align: center
+                  text_font: font_small
+            on_click:
+              then:
+                - lvgl.page.show: main_page
 
 interval:
   - interval: 10s
