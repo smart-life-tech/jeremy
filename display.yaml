@@ -164,41 +164,49 @@ globals:
   - id: plug1_ip_str
     type: std::string
     restore_value: yes
+    max_restore_data_length: 20
     initial_value: '"192.168.68.76"'
 
   - id: plug2_ip_str
     type: std::string
     restore_value: yes
+    max_restore_data_length: 20
     initial_value: '"192.168.68.200"'
 
   - id: plug3_ip_str
     type: std::string
     restore_value: yes
+    max_restore_data_length: 20
     initial_value: '"192.168.68.201"'
 
   - id: plug4_ip_str
     type: std::string
     restore_value: yes
+    max_restore_data_length: 20
     initial_value: '"192.168.68.202"'
 
   - id: plug5_ip_str
     type: std::string
     restore_value: yes
+    max_restore_data_length: 20
     initial_value: '"192.168.68.203"'
 
   - id: plug6_ip_str
     type: std::string
     restore_value: yes
+    max_restore_data_length: 20
     initial_value: '"192.168.68.204"'
 
   - id: plug7_ip_str
     type: std::string
     restore_value: yes
+    max_restore_data_length: 20
     initial_value: '"192.168.68.205"'
 
   - id: plug8_ip_str
     type: std::string
     restore_value: yes
+    max_restore_data_length: 20
     initial_value: '"192.168.68.206"'
 
   # ================================
