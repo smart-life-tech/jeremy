@@ -4677,9 +4677,10 @@ lvgl:
                   text_font: font_small
             on_click:
               then:
-              - logger.log: "IP addresses saved"
-                level: INFO
-                tag: ip_setup
+              - logger.log:
+                  format: "IP addresses saved"
+                  level: INFO
+                  tag: ip_setup
               - lvgl.page.show: main_page
 
         # Back Button
