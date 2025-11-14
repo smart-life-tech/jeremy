@@ -4704,187 +4704,187 @@ lvgl:
     - id: plug_info_page
       widgets:
       - obj:
-        id: info_bg
-        x: 0
-        y: 0
-        width: 800
-        height: 480
-        bg_color: 0x101830
+          id: info_bg
+          x: 0
+          y: 0
+          width: 800
+          height: 480
+          bg_color: 0x101830
 
       - label:
-        text: "Plug Information"
-        align: top_mid
-        y: 10
-        text_font: font_large
-        text_color: 0xFFFFFF
+          text: "Plug Information"
+          align: top_mid
+          y: 10
+          text_font: font_large
+          text_color: 0xFFFFFF
 
       - label:
-        id: lbl_plug1_title
-        text: "Plug 1:"
-        x: 20
-        y: 60
-        text_font: font_small
-        text_color: 0xFFFFFF
+          id: lbl_plug1_title
+          text: "Plug 1:"
+          x: 20
+          y: 60
+          text_font: font_small
+          text_color: 0xFFFFFF
 
       - label:
-        id: lbl_plug1_info
-        text: "-"
-        x: 120
-        y: 60
-        width: 640
-        text_font: font_small
-        text_color: 0xFFFFFF
-        long_mode: dot
+          id: lbl_plug1_info
+          text: "-"
+          x: 120
+          y: 60
+          width: 640
+          text_font: font_small
+          text_color: 0xFFFFFF
+          long_mode: dot
 
       - label:
-        id: lbl_plug2_title
-        text: "Plug 2:"
-        x: 20
-        y: 90
-        text_font: font_small
-        text_color: 0xFFFFFF
+          id: lbl_plug2_title
+          text: "Plug 2:"
+          x: 20
+          y: 90
+          text_font: font_small
+          text_color: 0xFFFFFF
 
       - label:
-        id: lbl_plug2_info
-        text: "-"
-        x: 120
-        y: 90
-        width: 640
-        text_font: font_small
-        text_color: 0xFFFFFF
-        long_mode: dot
+          id: lbl_plug2_info
+          text: "-"
+          x: 120
+          y: 90
+          width: 640
+          text_font: font_small
+          text_color: 0xFFFFFF
+          long_mode: dot
 
       - label:
-        id: lbl_plug3_title
-        text: "Plug 3:"
-        x: 20
-        y: 120
-        text_font: font_small
-        text_color: 0xFFFFFF
+          id: lbl_plug3_title
+          text: "Plug 3:"
+          x: 20
+          y: 120
+          text_font: font_small
+          text_color: 0xFFFFFF
 
       - label:
-        id: lbl_plug3_info
-        text: "-"
-        x: 120
-        y: 120
-        width: 640
-        text_font: font_small
-        text_color: 0xFFFFFF
-        long_mode: dot
+          id: lbl_plug3_info
+          text: "-"
+          x: 120
+          y: 120
+          width: 640
+          text_font: font_small
+          text_color: 0xFFFFFF
+          long_mode: dot
 
       - label:
-        id: lbl_plug4_title
-        text: "Plug 4:"
-        x: 20
-        y: 150
-        text_font: font_small
-        text_color: 0xFFFFFF
+          id: lbl_plug4_title
+          text: "Plug 4:"
+          x: 20
+          y: 150
+          text_font: font_small
+          text_color: 0xFFFFFF
 
       - label:
-        id: lbl_plug4_info
-        text: "-"
-        x: 120
-        y: 150
-        width: 640
-        text_font: font_small
-        text_color: 0xFFFFFF
-        long_mode: dot
+          id: lbl_plug4_info
+          text: "-"
+          x: 120
+          y: 150
+          width: 640
+          text_font: font_small
+          text_color: 0xFFFFFF
+          long_mode: dot
 
       - label:
-        id: lbl_plug5_title
-        text: "Plug 5:"
-        x: 20
-        y: 190
-        text_font: font_small
-        text_color: 0xFFFFFF
+          id: lbl_plug5_title
+          text: "Plug 5:"
+          x: 20
+          y: 190
+          text_font: font_small
+          text_color: 0xFFFFFF
 
       - label:
-        id: lbl_plug5_info
-        text: "-"
-        x: 120
-        y: 190
-        width: 640
-        text_font: font_small
-        text_color: 0xFFFFFF
-        long_mode: dot
+          id: lbl_plug5_info
+          text: "-"
+          x: 120
+          y: 190
+          width: 640
+          text_font: font_small
+          text_color: 0xFFFFFF
+          long_mode: dot
 
       - label:
-        id: lbl_plug6_title
-        text: "Plug 6:"
-        x: 20
-        y: 220
-        text_font: font_small
-        text_color: 0xFFFFFF
+          id: lbl_plug6_title
+          text: "Plug 6:"
+          x: 20
+          y: 220
+          text_font: font_small
+          text_color: 0xFFFFFF
 
       - label:
-        id: lbl_plug6_info
-        text: "-"
-        x: 120
-        y: 220
-        width: 640
-        text_font: font_small
-        text_color: 0xFFFFFF
-        long_mode: dot
+          id: lbl_plug6_info
+          text: "-"
+          x: 120
+          y: 220
+          width: 640
+          text_font: font_small
+          text_color: 0xFFFFFF
+          long_mode: dot
 
       - label:
-        id: lbl_plug7_title
-        text: "Plug 7:"
-        x: 20
-        y: 250
-        text_font: font_small
-        text_color: 0xFFFFFF
+          id: lbl_plug7_title
+          text: "Plug 7:"
+          x: 20
+          y: 250
+          text_font: font_small
+          text_color: 0xFFFFFF
 
       - label:
-        id: lbl_plug7_info
-        text: "-"
-        x: 120
-        y: 250
-        width: 640
-        text_font: font_small
-        text_color: 0xFFFFFF
-        long_mode: dot
+          id: lbl_plug7_info
+          text: "-"
+          x: 120
+          y: 250
+          width: 640
+          text_font: font_small
+          text_color: 0xFFFFFF
+          long_mode: dot
 
       - label:
-        id: lbl_plug8_title
-        text: "Plug 8:"
-        x: 20
-        y: 280
-        text_font: font_small
-        text_color: 0xFFFFFF
+          id: lbl_plug8_title
+          text: "Plug 8:"
+          x: 20
+          y: 280
+          text_font: font_small
+          text_color: 0xFFFFFF
 
       - label:
-        id: lbl_plug8_info
-        text: "-"
-        x: 120
-        y: 280
-        width: 640
-        text_font: font_small
-        text_color: 0xFFFFFF
-        long_mode: dot
+          id: lbl_plug8_info
+          text: "-"
+          x: 120
+          y: 280
+          width: 640
+          text_font: font_small
+          text_color: 0xFFFFFF
+          long_mode: dot
 
       - button:
-        id: btn_info_refresh
-        x: 200
-        y: 340
-        width: 150
-        height: 45
-        bg_color: 0x228B22
-        widgets: [{ label: { text: "Refresh", align: center, text_font: font_small }}]
-        on_click:
-          then:
-          - script.execute: fetch_all_plug_info
+          id: btn_info_refresh
+          x: 200
+          y: 340
+          width: 150
+          height: 45
+          bg_color: 0x228B22
+          widgets: [{ label: { text: "Refresh", align: center, text_font: font_small }}]
+          on_click:
+            then:
+            - script.execute: fetch_all_plug_info
 
       - button:
-        id: btn_info_back
-        x: 380
-        y: 340
-        width: 150
-        height: 45
-        bg_color: 0x444444
-        widgets: [{ label: { text: "Back", align: center, text_font: font_small }}]
-        on_click:
-          then:
-          - lvgl.page.show: main_page
+          id: btn_info_back
+          x: 380
+          y: 340
+          width: 150
+          height: 45
+          bg_color: 0x444444
+          widgets: [{ label: { text: "Back", align: center, text_font: font_small }}]
+          on_click:
+            then:
+            - lvgl.page.show: main_page
 
 interval:
   - interval: 10s
