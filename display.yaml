@@ -4681,7 +4681,6 @@ lvgl:
                 format: "IP addresses saved"
                 level: INFO
                 tag: ip_setup
-              - lvgl.keyboard.hide: keyboard_ip
               - lvgl.page.show: main_page
 
         # Back Button
@@ -4699,7 +4698,6 @@ lvgl:
                   text_font: font_small
             on_click:
               then:
-                - lvgl.keyboard.hide: keyboard_ip
                 - lvgl.page.show: main_page
 
     # PLUG INFO PAGE
