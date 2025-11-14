@@ -131,3 +131,8 @@ To make the IP setup page easily accessible, you can add a button to the main pa
       then:
         - lvgl.page.show: ip_setup_page
 ```
+
+**Side Note (2025-11-14):**
+- Today I added parsing lambdas for the Plug Info page (initially applied to plugs 1–3) so the display shows a compact summary (state, power in W, current in A, voltage in V) instead of the raw HTTP response body.
+- Your editor may show `Unresolved tag: !lambda` linter warnings; please run `esphome config display.yaml` locally to confirm actual compile status. If you paste the `esphome` output here I will fix any syntax issues.
+- Next steps: expand parsing to plugs 4–8 and refine label formatting (I can do this on request).
