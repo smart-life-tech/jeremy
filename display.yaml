@@ -616,8 +616,26 @@ script:
           on_response:
             then:
               - lambda: |-
-                  // put the full response in the label (may be large)
-                  lv_label_set_text(id(lbl_plug1_info), body.c_str());
+                  auto extract = [&](const std::string &k)->std::string {
+                    size_t p = body.find(k);
+                    if (p == std::string::npos) return std::string("");
+                    size_t colon = body.find(':', p);
+                    if (colon == std::string::npos) return std::string("");
+                    size_t s = colon + 1;
+                    while (s < body.size() && (body[s] == ' ' || body[s] == '"')) s++;
+                    size_t e = s;
+                    while (e < body.size() && ((body[e] >= '0' && body[e] <= '9') || body[e] == '.' || body[e] == '-')) e++;
+                    return body.substr(s, e - s);
+                  };
+                  std::string st = extract("\"state\"");
+                  std::string pw = extract("\"power\"");
+                  std::string cu = extract("\"current\"");
+                  std::string vo = extract("\"voltage\"");
+                  std::string out = "S:" + (st.empty()? std::string("?") : st) +
+                                     "  P:" + (pw.empty()? std::string("-") : pw) + "W" +
+                                     "  I:" + (cu.empty()? std::string("-") : cu) + "A" +
+                                     "  V:" + (vo.empty()? std::string("-") : vo) + "V";
+                  lv_label_set_text(id(lbl_plug1_info), out.c_str());
           on_error:
             then:
               - lambda: |-
@@ -629,7 +647,26 @@ script:
           on_response:
             then:
               - lambda: |-
-                  lv_label_set_text(id(lbl_plug2_info), body.c_str());
+                  auto extract = [&](const std::string &k)->std::string {
+                    size_t p = body.find(k);
+                    if (p == std::string::npos) return std::string("");
+                    size_t colon = body.find(':', p);
+                    if (colon == std::string::npos) return std::string("");
+                    size_t s = colon + 1;
+                    while (s < body.size() && (body[s] == ' ' || body[s] == '"')) s++;
+                    size_t e = s;
+                    while (e < body.size() && ((body[e] >= '0' && body[e] <= '9') || body[e] == '.' || body[e] == '-')) e++;
+                    return body.substr(s, e - s);
+                  };
+                  std::string st = extract("\"state\"");
+                  std::string pw = extract("\"power\"");
+                  std::string cu = extract("\"current\"");
+                  std::string vo = extract("\"voltage\"");
+                  std::string out = "S:" + (st.empty()? std::string("?") : st) +
+                                     "  P:" + (pw.empty()? std::string("-") : pw) + "W" +
+                                     "  I:" + (cu.empty()? std::string("-") : cu) + "A" +
+                                     "  V:" + (vo.empty()? std::string("-") : vo) + "V";
+                  lv_label_set_text(id(lbl_plug2_info), out.c_str());
           on_error:
             then:
               - lambda: |-
@@ -641,7 +678,26 @@ script:
           on_response:
             then:
               - lambda: |-
-                  lv_label_set_text(id(lbl_plug3_info), body.c_str());
+                  auto extract = [&](const std::string &k)->std::string {
+                    size_t p = body.find(k);
+                    if (p == std::string::npos) return std::string("");
+                    size_t colon = body.find(':', p);
+                    if (colon == std::string::npos) return std::string("");
+                    size_t s = colon + 1;
+                    while (s < body.size() && (body[s] == ' ' || body[s] == '"')) s++;
+                    size_t e = s;
+                    while (e < body.size() && ((body[e] >= '0' && body[e] <= '9') || body[e] == '.' || body[e] == '-')) e++;
+                    return body.substr(s, e - s);
+                  };
+                  std::string st = extract("\"state\"");
+                  std::string pw = extract("\"power\"");
+                  std::string cu = extract("\"current\"");
+                  std::string vo = extract("\"voltage\"");
+                  std::string out = "S:" + (st.empty()? std::string("?") : st) +
+                                     "  P:" + (pw.empty()? std::string("-") : pw) + "W" +
+                                     "  I:" + (cu.empty()? std::string("-") : cu) + "A" +
+                                     "  V:" + (vo.empty()? std::string("-") : vo) + "V";
+                  lv_label_set_text(id(lbl_plug3_info), out.c_str());
           on_error:
             then:
               - lambda: |-
@@ -653,11 +709,30 @@ script:
           on_response:
             then:
               - lambda: |-
-                  lv_label_set_text(id(lbl_plug4_info), body.c_str());
+                  auto extract = [&](const std::string &k)->std::string {
+                    size_t p = body.find(k);
+                    if (p == std::string::npos) return std::string("");
+                    size_t colon = body.find(':', p);
+                    if (colon == std::string::npos) return std::string("");
+                    size_t s = colon + 1;
+                    while (s < body.size() && (body[s] == ' ' || body[s] == '"')) s++;
+                    size_t e = s;
+                    while (e < body.size() && ((body[e] >= '0' && body[e] <= '9') || body[e] == '.' || body[e] == '-')) e++;
+                    return body.substr(s, e - s);
+                  };
+                  std::string st = extract("\"state\"");
+                  std::string pw = extract("\"power\"");
+                  std::string cu = extract("\"current\"");
+                  std::string vo = extract("\"voltage\"");
+                  std::string out = "S:" + (st.empty()? std::string("?") : st) +
+                                     "  P:" + (pw.empty()? std::string("-") : pw) + "W" +
+                                     "  I:" + (cu.empty()? std::string("-") : cu) + "A" +
+                                     "  V:" + (vo.empty()? std::string("-") : vo) + "V";
+                  lv_label_set_text(id(lbl_plug1_info), out.c_str());
           on_error:
             then:
               - lambda: |-
-                  lv_label_set_text(id(lbl_plug4_info), "unreachable");
+                  lv_label_set_text(id(lbl_plug1_info), "unreachable");
       - http_request.get:
           url: !lambda |-
             return std::string("http://") + id(plug5_ip_str) + std::string("/switch/kauf_plug");
