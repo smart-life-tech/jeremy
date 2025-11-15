@@ -1,8 +1,8 @@
 substitutions:
-  plug1_ip: "192.168.68.76"
-  plug2_ip: "192.168.68.200"
-  plug3_ip: "192.168.68.201"
-  plug4_ip: "192.168.68.202"
+  plug1_ip: "192.168.68.79"
+  plug2_ip: "192.168.68.77"
+  plug3_ip: "192.168.68.76"
+  plug4_ip: "192.168.68.75"
   plug5_ip: "192.168.68.203"
   plug6_ip: "192.168.68.204"
   plug7_ip: "192.168.68.205"
@@ -67,6 +67,7 @@ api:
     key: "+6lkh+FkWq3HVFh6+NukfmN188wGMQap7sw2RK1p9Gg="
 
 ota:
+  # DO NOT REMOVE
   - platform: esphome
     password: "48170f28ed94e6fe392d67906b01ff74"
 
@@ -84,7 +85,7 @@ mqtt:
 
 http_request:
   id: http_client
-  timeout: 2s
+  timeout: 500ms
 
 i2c:
   sda: GPIO08
@@ -165,25 +166,25 @@ globals:
     type: std::string
     restore_value: yes
     max_restore_data_length: 20
-    initial_value: '"192.168.68.76"'
+    initial_value: '"192.168.68.79"'
 
   - id: plug2_ip_str
     type: std::string
     restore_value: yes
     max_restore_data_length: 20
-    initial_value: '"192.168.68.200"'
+    initial_value: '"192.168.68.77"'
 
   - id: plug3_ip_str
     type: std::string
     restore_value: yes
     max_restore_data_length: 20
-    initial_value: '"192.168.68.201"'
+    initial_value: '"192.168.68.76"'
 
   - id: plug4_ip_str
     type: std::string
     restore_value: yes
     max_restore_data_length: 20
-    initial_value: '"192.168.68.202"'
+    initial_value: '"192.168.68.75"'
 
   - id: plug5_ip_str
     type: std::string
@@ -631,15 +632,62 @@ script:
                   std::string pw = extract("\"power\"");
                   std::string cu = extract("\"current\"");
                   std::string vo = extract("\"voltage\"");
-                  std::string out = "S:" + (st.empty()? std::string("?") : st) +
-                                     "  P:" + (pw.empty()? std::string("-") : pw) + "W" +
-                                     "  I:" + (cu.empty()? std::string("-") : cu) + "A" +
-                                     "  V:" + (vo.empty()? std::string("-") : vo) + "V";
-                  lv_label_set_text(id(lbl_plug1_info), out.c_str());
+                  std::string out = "S:" + (st.empty()? std::string("?") : st);
+                  lv_label_set_text(id(lbl_plug4_info), out.c_str());
           on_error:
             then:
               - lambda: |-
-                  lv_label_set_text(id(lbl_plug1_info), "unreachable");
+                  lv_label_set_text(id(lbl_plug4_info), "unreachable");
+      - http_request.get:
+          url: !lambda |-
+            return std::string("http://") + id(plug4_ip_str) + std::string("/sensor/current");
+          capture_response: true
+          on_response:
+            then:
+              - lambda: |-
+                  auto parse_number = [](const std::string &b)->std::string {
+                    size_t s = 0;
+                    while (s < b.size() && !((b[s] >= '0' && b[s] <= '9') || b[s] == '.' || b[s] == '-')) s++;
+                    if (s == b.size()) return std::string("");
+                    size_t e = s;
+                    while (e < b.size() && ((b[e] >= '0' && b[e] <= '9') || b[e] == '.' || b[e] == '-')) e++;
+                    return b.substr(s, e - s);
+                  };
+                  std::string val = parse_number(body);
+                  const char *old = lv_label_get_text(id(lbl_plug4_info));
+                  std::string out = std::string(old ? old : "") + "  I:" + (val.empty()? std::string("-") : val) + "A";
+                  lv_label_set_text(id(lbl_plug4_info), out.c_str());
+          on_error:
+            then:
+              - lambda: |-
+                  const char *old = lv_label_get_text(id(lbl_plug4_info));
+                  std::string out = std::string(old ? old : "") + "  I:-A";
+                  lv_label_set_text(id(lbl_plug4_info), out.c_str());
+      - http_request.get:
+          url: !lambda |-
+            return std::string("http://") + id(plug4_ip_str) + std::string("/sensor/voltage");
+          capture_response: true
+          on_response:
+            then:
+              - lambda: |-
+                  auto parse_number = [](const std::string &b)->std::string {
+                    size_t s = 0;
+                    while (s < b.size() && !((b[s] >= '0' && b[s] <= '9') || b[s] == '.' || b[s] == '-')) s++;
+                    if (s == b.size()) return std::string("");
+                    size_t e = s;
+                    while (e < b.size() && ((b[e] >= '0' && b[e] <= '9') || b[e] == '.' || b[e] == '-')) e++;
+                    return b.substr(s, e - s);
+                  };
+                  std::string val = parse_number(body);
+                  const char *old = lv_label_get_text(id(lbl_plug4_info));
+                  std::string out = std::string(old ? old : "") + "  V:" + (val.empty()? std::string("-") : val) + "V";
+                  lv_label_set_text(id(lbl_plug4_info), out.c_str());
+          on_error:
+            then:
+              - lambda: |-
+                  const char *old = lv_label_get_text(id(lbl_plug4_info));
+                  std::string out = std::string(old ? old : "") + "  V:-V";
+                  lv_label_set_text(id(lbl_plug4_info), out.c_str());
       - http_request.get:
           url: !lambda |-
             return std::string("http://") + id(plug2_ip_str) + std::string("/switch/kauf_plug");
@@ -662,15 +710,62 @@ script:
                   std::string pw = extract("\"power\"");
                   std::string cu = extract("\"current\"");
                   std::string vo = extract("\"voltage\"");
-                  std::string out = "S:" + (st.empty()? std::string("?") : st) +
-                                     "  P:" + (pw.empty()? std::string("-") : pw) + "W" +
-                                     "  I:" + (cu.empty()? std::string("-") : cu) + "A" +
-                                     "  V:" + (vo.empty()? std::string("-") : vo) + "V";
+                  std::string out = "S:" + (st.empty()? std::string("?") : st);
                   lv_label_set_text(id(lbl_plug2_info), out.c_str());
           on_error:
             then:
               - lambda: |-
                   lv_label_set_text(id(lbl_plug2_info), "unreachable");
+      - http_request.get:
+          url: !lambda |-
+            return std::string("http://") + id(plug2_ip_str) + std::string("/sensor/current");
+          capture_response: true
+          on_response:
+            then:
+              - lambda: |-
+                  auto parse_number = [](const std::string &b)->std::string {
+                    size_t s = 0;
+                    while (s < b.size() && !((b[s] >= '0' && b[s] <= '9') || b[s] == '.' || b[s] == '-')) s++;
+                    if (s == b.size()) return std::string("");
+                    size_t e = s;
+                    while (e < b.size() && ((b[e] >= '0' && b[e] <= '9') || b[e] == '.' || b[e] == '-')) e++;
+                    return b.substr(s, e - s);
+                  };
+                  std::string val = parse_number(body);
+                  const char *old = lv_label_get_text(id(lbl_plug2_info));
+                  std::string out = std::string(old ? old : "") + "  I:" + (val.empty()? std::string("-") : val) + "A";
+                  lv_label_set_text(id(lbl_plug2_info), out.c_str());
+          on_error:
+            then:
+              - lambda: |-
+                  const char *old = lv_label_get_text(id(lbl_plug2_info));
+                  std::string out = std::string(old ? old : "") + "  I:-A";
+                  lv_label_set_text(id(lbl_plug2_info), out.c_str());
+      - http_request.get:
+          url: !lambda |-
+            return std::string("http://") + id(plug2_ip_str) + std::string("/sensor/voltage");
+          capture_response: true
+          on_response:
+            then:
+              - lambda: |-
+                  auto parse_number = [](const std::string &b)->std::string {
+                    size_t s = 0;
+                    while (s < b.size() && !((b[s] >= '0' && b[s] <= '9') || b[s] == '.' || b[s] == '-')) s++;
+                    if (s == b.size()) return std::string("");
+                    size_t e = s;
+                    while (e < b.size() && ((b[e] >= '0' && b[e] <= '9') || b[e] == '.' || b[e] == '-')) e++;
+                    return b.substr(s, e - s);
+                  };
+                  std::string val = parse_number(body);
+                  const char *old = lv_label_get_text(id(lbl_plug2_info));
+                  std::string out = std::string(old ? old : "") + "  V:" + (val.empty()? std::string("-") : val) + "V";
+                  lv_label_set_text(id(lbl_plug2_info), out.c_str());
+          on_error:
+            then:
+              - lambda: |-
+                  const char *old = lv_label_get_text(id(lbl_plug2_info));
+                  std::string out = std::string(old ? old : "") + "  V:-V";
+                  lv_label_set_text(id(lbl_plug2_info), out.c_str());
       - http_request.get:
           url: !lambda |-
             return std::string("http://") + id(plug3_ip_str) + std::string("/switch/kauf_plug");
@@ -693,15 +788,62 @@ script:
                   std::string pw = extract("\"power\"");
                   std::string cu = extract("\"current\"");
                   std::string vo = extract("\"voltage\"");
-                  std::string out = "S:" + (st.empty()? std::string("?") : st) +
-                                     "  P:" + (pw.empty()? std::string("-") : pw) + "W" +
-                                     "  I:" + (cu.empty()? std::string("-") : cu) + "A" +
-                                     "  V:" + (vo.empty()? std::string("-") : vo) + "V";
+                  std::string out = "S:" + (st.empty()? std::string("?") : st);
                   lv_label_set_text(id(lbl_plug3_info), out.c_str());
           on_error:
             then:
               - lambda: |-
                   lv_label_set_text(id(lbl_plug3_info), "unreachable");
+      - http_request.get:
+          url: !lambda |-
+            return std::string("http://") + id(plug3_ip_str) + std::string("/sensor/current");
+          capture_response: true
+          on_response:
+            then:
+              - lambda: |-
+                  auto parse_number = [](const std::string &b)->std::string {
+                    size_t s = 0;
+                    while (s < b.size() && !((b[s] >= '0' && b[s] <= '9') || b[s] == '.' || b[s] == '-')) s++;
+                    if (s == b.size()) return std::string("");
+                    size_t e = s;
+                    while (e < b.size() && ((b[e] >= '0' && b[e] <= '9') || b[e] == '.' || b[e] == '-')) e++;
+                    return b.substr(s, e - s);
+                  };
+                  std::string val = parse_number(body);
+                  const char *old = lv_label_get_text(id(lbl_plug3_info));
+                  std::string out = std::string(old ? old : "") + "  I:" + (val.empty()? std::string("-") : val) + "A";
+                  lv_label_set_text(id(lbl_plug3_info), out.c_str());
+          on_error:
+            then:
+              - lambda: |-
+                  const char *old = lv_label_get_text(id(lbl_plug3_info));
+                  std::string out = std::string(old ? old : "") + "  I:-A";
+                  lv_label_set_text(id(lbl_plug3_info), out.c_str());
+      - http_request.get:
+          url: !lambda |-
+            return std::string("http://") + id(plug3_ip_str) + std::string("/sensor/voltage");
+          capture_response: true
+          on_response:
+            then:
+              - lambda: |-
+                  auto parse_number = [](const std::string &b)->std::string {
+                    size_t s = 0;
+                    while (s < b.size() && !((b[s] >= '0' && b[s] <= '9') || b[s] == '.' || b[s] == '-')) s++;
+                    if (s == b.size()) return std::string("");
+                    size_t e = s;
+                    while (e < b.size() && ((b[e] >= '0' && b[e] <= '9') || b[e] == '.' || b[e] == '-')) e++;
+                    return b.substr(s, e - s);
+                  };
+                  std::string val = parse_number(body);
+                  const char *old = lv_label_get_text(id(lbl_plug3_info));
+                  std::string out = std::string(old ? old : "") + "  V:" + (val.empty()? std::string("-") : val) + "V";
+                  lv_label_set_text(id(lbl_plug3_info), out.c_str());
+          on_error:
+            then:
+              - lambda: |-
+                  const char *old = lv_label_get_text(id(lbl_plug3_info));
+                  std::string out = std::string(old ? old : "") + "  V:-V";
+                  lv_label_set_text(id(lbl_plug3_info), out.c_str());
       - http_request.get:
           url: !lambda |-
             return std::string("http://") + id(plug4_ip_str) + std::string("/switch/kauf_plug");
@@ -724,15 +866,62 @@ script:
                   std::string pw = extract("\"power\"");
                   std::string cu = extract("\"current\"");
                   std::string vo = extract("\"voltage\"");
-                  std::string out = "S:" + (st.empty()? std::string("?") : st) +
-                                     "  P:" + (pw.empty()? std::string("-") : pw) + "W" +
-                                     "  I:" + (cu.empty()? std::string("-") : cu) + "A" +
-                                     "  V:" + (vo.empty()? std::string("-") : vo) + "V";
+                  std::string out = "S:" + (st.empty()? std::string("?") : st);
                   lv_label_set_text(id(lbl_plug1_info), out.c_str());
           on_error:
             then:
               - lambda: |-
                   lv_label_set_text(id(lbl_plug1_info), "unreachable");
+      - http_request.get:
+          url: !lambda |-
+            return std::string("http://") + id(plug1_ip_str) + std::string("/sensor/current");
+          capture_response: true
+          on_response:
+            then:
+              - lambda: |-
+                  auto parse_number = [](const std::string &b)->std::string {
+                    size_t s = 0;
+                    while (s < b.size() && !((b[s] >= '0' && b[s] <= '9') || b[s] == '.' || b[s] == '-')) s++;
+                    if (s == b.size()) return std::string("");
+                    size_t e = s;
+                    while (e < b.size() && ((b[e] >= '0' && b[e] <= '9') || b[e] == '.' || b[e] == '-')) e++;
+                    return b.substr(s, e - s);
+                  };
+                  std::string val = parse_number(body);
+                  const char *old = lv_label_get_text(id(lbl_plug1_info));
+                  std::string out = std::string(old ? old : "") + "  I:" + (val.empty()? std::string("-") : val) + "A";
+                  lv_label_set_text(id(lbl_plug1_info), out.c_str());
+          on_error:
+            then:
+              - lambda: |-
+                  const char *old = lv_label_get_text(id(lbl_plug1_info));
+                  std::string out = std::string(old ? old : "") + "  I:-A";
+                  lv_label_set_text(id(lbl_plug1_info), out.c_str());
+      - http_request.get:
+          url: !lambda |-
+            return std::string("http://") + id(plug1_ip_str) + std::string("/sensor/voltage");
+          capture_response: true
+          on_response:
+            then:
+              - lambda: |-
+                  auto parse_number = [](const std::string &b)->std::string {
+                    size_t s = 0;
+                    while (s < b.size() && !((b[s] >= '0' && b[s] <= '9') || b[s] == '.' || b[s] == '-')) s++;
+                    if (s == b.size()) return std::string("");
+                    size_t e = s;
+                    while (e < b.size() && ((b[e] >= '0' && b[e] <= '9') || b[e] == '.' || b[e] == '-')) e++;
+                    return b.substr(s, e - s);
+                  };
+                  std::string val = parse_number(body);
+                  const char *old = lv_label_get_text(id(lbl_plug1_info));
+                  std::string out = std::string(old ? old : "") + "  V:" + (val.empty()? std::string("-") : val) + "V";
+                  lv_label_set_text(id(lbl_plug1_info), out.c_str());
+          on_error:
+            then:
+              - lambda: |-
+                  const char *old = lv_label_get_text(id(lbl_plug1_info));
+                  std::string out = std::string(old ? old : "") + "  V:-V";
+                  lv_label_set_text(id(lbl_plug1_info), out.c_str());
       - http_request.get:
           url: !lambda |-
             return std::string("http://") + id(plug5_ip_str) + std::string("/switch/kauf_plug");
@@ -1695,8 +1884,8 @@ lvgl:
 
         # backlight controls (shifted left so ON lines up with Timer 4)
         - label:
-            x: 20
-            y: 396
+            x: 21
+            y: 399
             text: "Backlight:"
             text_font: font_small
             text_color: 0xFFFFFF
@@ -1741,9 +1930,9 @@ lvgl:
         # IP Settings button
         - button:
             id: btn_ip_settings
-            x: 380
+            x: 410
             y: 386
-            width: 130
+            width: 110
             height: 50
             bg_color: 0xFF8800
             widgets: [{ label: { text: "IP Setup", align: center, text_font: font_small }}]
@@ -1754,9 +1943,9 @@ lvgl:
 
         - button:
             id: btn_plug_info
-            x: 520
+            x: 530
             y: 386
-            width: 130
+            width: 110
             height: 50
             bg_color: 0x4444FF
             widgets: [{ label: { text: "Plug Info", align: center, text_font: font_small }}]
@@ -1770,8 +1959,8 @@ lvgl:
         # CLOCK POSITION ADJUSTMENT (moved down 5px)
         - label:
             id: lbl_main_time
-            x: 560
-            y: 392
+            x: 655
+            y: 393
             text: "--:-- --"
             text_font: font_large
             text_color: 0xFFFFFF
@@ -4436,7 +4625,7 @@ lvgl:
             width: 200
             height: 35
             one_line: true
-            placeholder_text: "192.168.68.76"
+            placeholder_text: "192.168.68.79"
             on_value:
               then:
                 - lambda: |-
@@ -4465,7 +4654,7 @@ lvgl:
             width: 200
             height: 35
             one_line: true
-            placeholder_text: "192.168.68.200"
+            placeholder_text: "192.168.68.77"
             on_value:
               then:
                 - lambda: |-
@@ -4494,7 +4683,7 @@ lvgl:
             width: 200
             height: 35
             one_line: true
-            placeholder_text: "192.168.68.201"
+            placeholder_text: "192.168.68.76"
             on_value:
               then:
                 - lambda: |-
@@ -4523,7 +4712,7 @@ lvgl:
             width: 200
             height: 35
             one_line: true
-            placeholder_text: "192.168.68.202"
+            placeholder_text: "192.168.68.75"
             on_value:
               then:
                 - lambda: |-
@@ -4887,6 +5076,9 @@ lvgl:
             - lvgl.page.show: main_page
 
 interval:
+  - interval: 10s
+    then:
+      - script.execute: fetch_all_plug_info
   - interval: 10s
     then:
       - script.execute: bl_auto_off_check
