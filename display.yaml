@@ -5513,6 +5513,7 @@ interval:
   - interval: 10s
     then:
       - script.execute: bl_auto_off_check
+      - script.execute: fetch_all_plug_info
 
   # Occasional “keep-alive” check for plug 1 (optional)
   - interval: 2min
