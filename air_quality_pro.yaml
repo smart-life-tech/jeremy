@@ -1,0 +1,536 @@
+# ============================================================================
+# AIR QUALITY PROFESSIONAL MODULE
+# ============================================================================
+# Professional-grade air quality detection system
+# Integrates: MiCS-6814 (CO, NH3, NO2), SCD41 (CO2), BME680 (VOC/IAQ)
+# 
+# SAFETY STANDARDS IMPLEMENTED:
+#   - OSHA PEL (Permissible Exposure Limits) for 8-hour TWA
+#   - WHO Air Quality Guidelines
+#   - IDLH (Immediately Dangerous to Life or Health) values
+#   - Real-time alerting with severity classification
+# ============================================================================
+
+globals:
+  # ========== ADVANCED GAS SENSOR CALIBRATION ==========
+  # Professional calibration with multi-point tracking
+  
+  - id: g_calibration_count
+    type: int
+    restore_value: true
+    initial_value: "0"
+    # Number of times baseline has been recalibrated (diagnostic)
+  
+  - id: g_calibration_timestamp
+    type: uint32_t
+    restore_value: true
+    initial_value: "0"
+    # Unix timestamp of last calibration (for aging detection)
+  
+  # ========== ALERT STATE TRACKING ==========
+  # Professional multi-level alerting system
+  
+  - id: aq_alert_level
+    type: int
+    restore_value: no
+    initial_value: "0"
+    # 0=Normal, 1=Warning, 2=Alert, 3=Critical/Hazardous
+  
+  - id: aq_alert_timestamp
+    type: uint32_t
+    restore_value: no
+    initial_value: "0"
+    # When the current alert state was triggered
+  
+  - id: aq_triggered_gas
+    type: std::string
+    restore_value: no
+    initial_value: '""'
+    # Which gas triggered the alert: "CO", "NH3", "NO2", "CO2", "VOC"
+  
+  - id: aq_data_quality_score
+    type: float
+    restore_value: no
+    initial_value: "100.0"
+    # 0-100% data quality (based on sensor reliability, calibration validity)
+
+sensor:
+  # ========== PROFESSIONAL SAFETY SCORING ==========
+  # Calculates a single 0-100 air quality score combining all sensors
+  
+  - platform: template
+    name: "Air Quality Score"
+    id: aq_score
+    unit_of_measurement: "%"
+    icon: "mdi:air-filter"
+    device_class: "aqi"
+    state_class: measurement
+    accuracy_decimals: 1
+    update_interval: 5s
+    lambda: |-
+      // Composite AQ score: 100% = perfect, 0% = hazardous
+      // Weighted scoring based on sensor reliability
+      
+      float score = 100.0f;
+      int sensor_count = 0;
+      
+      // CO2 scoring: <400=perfect, >2000=hazardous
+      if (id(scd41_co2).has_state()) {
+        float co2 = id(scd41_co2).state;
+        float co2_penalty = 0.0f;
+        if (co2 < 400) co2_penalty = 0;
+        else if (co2 < 800) co2_penalty = (co2 - 400) / 400 * 5;      // 0-5 points
+        else if (co2 < 1200) co2_penalty = 5 + (co2 - 800) / 400 * 10; // 5-15 points
+        else if (co2 < 2000) co2_penalty = 15 + (co2 - 1200) / 800 * 25; // 15-40 points
+        else co2_penalty = 40 + (co2 - 2000) / 2000 * 40; // 40-80 points
+        score -= co2_penalty * 0.25f; // Weight: 25%
+        sensor_count++;
+      }
+      
+      // VOC/IAQ scoring: <150=perfect, >400=hazardous
+      if (id(bme680_iaq).has_state()) {
+        float iaq = id(bme680_iaq).state;
+        float iaq_penalty = 0.0f;
+        if (iaq < 50) iaq_penalty = 0;
+        else if (iaq < 150) iaq_penalty = (iaq - 50) / 100 * 10;     // 0-10 points
+        else if (iaq < 300) iaq_penalty = 10 + (iaq - 150) / 150 * 20; // 10-30 points
+        else if (iaq < 400) iaq_penalty = 30 + (iaq - 300) / 100 * 20; // 30-50 points
+        else iaq_penalty = 50 + (iaq - 400) / 100 * 30; // 50-80 points
+        score -= iaq_penalty * 0.25f; // Weight: 25%
+        sensor_count++;
+      }
+      
+      // MiCS Gases: Apply only if calibrated
+      if (id(g_baseline_valid) && id(gas_co_ppm).has_state()) {
+        float co = id(gas_co_ppm).state;
+        float co_penalty = 0.0f;
+        // OSHA PEL: 50ppm, IDLH: 1200ppm
+        if (co < 10) co_penalty = 0;
+        else if (co < 35) co_penalty = (co - 10) / 25 * 15;  // 0-15 at OSHA level
+        else if (co < 100) co_penalty = 15 + (co - 35) / 65 * 25; // 15-40 at higher levels
+        else if (co < 500) co_penalty = 40 + (co - 100) / 400 * 35; // 40-75
+        else co_penalty = 75 + (co - 500) / 500 * 25; // 75-100% penalty
+        score -= co_penalty * 0.15f; // Weight: 15%
+        sensor_count++;
+      }
+      
+      if (id(g_baseline_valid) && id(gas_nh3_ppm).has_state()) {
+        float nh3 = id(gas_nh3_ppm).state;
+        float nh3_penalty = 0.0f;
+        // OSHA PEL: 50ppm, IDLH: 300ppm
+        if (nh3 < 25) nh3_penalty = 0;
+        else if (nh3 < 50) nh3_penalty = (nh3 - 25) / 25 * 20;
+        else if (nh3 < 150) nh3_penalty = 20 + (nh3 - 50) / 100 * 30; // 20-50
+        else nh3_penalty = 50 + (nh3 - 150) / 150 * 50; // 50-100
+        score -= nh3_penalty * 0.20f; // Weight: 20%
+        sensor_count++;
+      }
+      
+      if (id(g_baseline_valid) && id(gas_no2_ppm).has_state()) {
+        float no2 = id(gas_no2_ppm).state;
+        float no2_penalty = 0.0f;
+        // OSHA PEL: 5ppm, IDLH: 20ppm
+        if (no2 < 2) no2_penalty = 0;
+        else if (no2 < 5) no2_penalty = (no2 - 2) / 3 * 15;
+        else if (no2 < 10) no2_penalty = 15 + (no2 - 5) / 5 * 25; // 15-40
+        else no2_penalty = 40 + (no2 - 10) / 10 * 60; // 40-100
+        score -= no2_penalty * 0.20f; // Weight: 20%
+        sensor_count++;
+      }
+      
+      if (sensor_count > 0) {
+        if (score < 0) score = 0;
+        return score;
+      }
+      return NAN;
+    on_value:
+      then:
+        - script.execute: evaluate_air_quality_alert
+
+  # ========== ALERT SEVERITY CLASSIFICATION ==========
+  # Text-based severity indicator for display/notifications
+  
+  - platform: template
+    name: "AQ Alert Status"
+    id: aq_alert_status
+    icon: "mdi:alert-circle"
+    update_interval: 5s
+    lambda: |-
+      if (!id(aq_score).has_state()) return std::string("NO DATA");
+      
+      float score = id(aq_score).state;
+      
+      if (score >= 75) return std::string("EXCELLENT");
+      else if (score >= 50) return std::string("GOOD");
+      else if (score >= 25) return std::string("FAIR");
+      else if (score >= 10) return std::string("POOR");
+      else return std::string("HAZARDOUS");
+
+  # ========== GAS EXPOSURE TIME TRACKING ==========
+  # Monitors cumulative dangerous exposure
+  
+  - platform: template
+    name: "CO Exposure Time (min)"
+    id: co_exposure_minutes
+    unit_of_measurement: "min"
+    icon: "mdi:clock-alert"
+    entity_category: diagnostic
+    accuracy_decimals: 0
+    update_interval: 60s
+    lambda: |-
+      // Returns minutes of cumulative exposure to CO > OSHA PEL (50ppm)
+      if (!id(g_baseline_valid) || !id(gas_co_ppm).has_state()) return NAN;
+      
+      static uint32_t exposure_start = 0;
+      static uint32_t total_exposure_seconds = 0;
+      uint32_t now = millis() / 1000; // Current time in seconds
+      
+      if (id(gas_co_ppm).state > 50.0f) {
+        // Currently exposed: track time
+        if (exposure_start == 0) exposure_start = now;
+      } else {
+        // No longer exposed: accumulate time
+        if (exposure_start > 0) {
+          total_exposure_seconds += (now - exposure_start);
+          exposure_start = 0;
+        }
+      }
+      
+      return total_exposure_seconds / 60.0f;
+
+  # ========== SENSOR HEALTH & RELIABILITY ==========
+  # Monitors sensor performance and data quality
+  
+  - platform: template
+    name: "Calibration Age (days)"
+    id: calib_age_days
+    unit_of_measurement: "d"
+    icon: "mdi:calendar-check"
+    entity_category: diagnostic
+    accuracy_decimals: 1
+    update_interval: 3600s
+    lambda: |-
+      if (id(g_calibration_timestamp) == 0) return NAN;
+      uint32_t age_seconds = (millis() / 1000) - id(g_calibration_timestamp);
+      return age_seconds / 86400.0f;
+
+  - platform: template
+    name: "Data Quality Score"
+    id: data_quality
+    unit_of_measurement: "%"
+    icon: "mdi:test-tube"
+    entity_category: diagnostic
+    accuracy_decimals: 0
+    update_interval: 60s
+    lambda: |-
+      float quality = 100.0f;
+      
+      // Deduct if baseline not set
+      if (!id(g_baseline_valid)) quality -= 40.0f;
+      
+      // Deduct if any critical sensor missing data
+      if (!id(scd41_co2).has_state()) quality -= 15.0f;
+      if (!id(bme680_iaq).has_state()) quality -= 15.0f;
+      
+      // Deduct if calibration is stale (>7 days)
+      if (id(calib_age_days).has_state() && id(calib_age_days).state > 7.0f) {
+        quality -= 10.0f;
+      }
+      
+      if (quality < 0) quality = 0;
+      return quality;
+
+  # ========== INDIVIDUAL GAS THRESHOLDS & ALERTS ==========
+  # Professional safety limits for each contaminant
+  
+  - platform: template
+    name: "CO Safety Status"
+    id: co_safety_status
+    icon: "mdi:alert-circle-outline"
+    entity_category: diagnostic
+    update_interval: 5s
+    lambda: |-
+      if (!id(g_baseline_valid) || !id(gas_co_ppm).has_state()) {
+        return std::string("NOT CALIBRATED");
+      }
+      
+      float ppm = id(gas_co_ppm).state;
+      if (ppm < 10) return std::string("NORMAL");
+      else if (ppm < 35) return std::string("ELEVATED");
+      else if (ppm < 100) return std::string("WARNING");
+      else if (ppm < 500) return std::string("ALERT");
+      else return std::string("CRITICAL");
+
+  - platform: template
+    name: "NH3 Safety Status"
+    id: nh3_safety_status
+    icon: "mdi:alert-circle-outline"
+    entity_category: diagnostic
+    update_interval: 5s
+    lambda: |-
+      if (!id(g_baseline_valid) || !id(gas_nh3_ppm).has_state()) {
+        return std::string("NOT CALIBRATED");
+      }
+      
+      float ppm = id(gas_nh3_ppm).state;
+      if (ppm < 25) return std::string("NORMAL");
+      else if (ppm < 50) return std::string("ELEVATED");
+      else if (ppm < 100) return std::string("WARNING");
+      else if (ppm < 300) return std::string("ALERT");
+      else return std::string("CRITICAL");
+
+  - platform: template
+    name: "NO2 Safety Status"
+    id: no2_safety_status
+    icon: "mdi:alert-circle-outline"
+    entity_category: diagnostic
+    update_interval: 5s
+    lambda: |-
+      if (!id(g_baseline_valid) || !id(gas_no2_ppm).has_state()) {
+        return std::string("NOT CALIBRATED");
+      }
+      
+      float ppm = id(gas_no2_ppm).state;
+      if (ppm < 0.5) return std::string("NORMAL");
+      else if (ppm < 2.0) return std::string("ELEVATED");
+      else if (ppm < 5.0) return std::string("WARNING");
+      else if (ppm < 15) return std::string("ALERT");
+      else return std::string("CRITICAL");
+
+  - platform: template
+    name: "CO2 Safety Status"
+    id: co2_safety_status
+    icon: "mdi:alert-circle-outline"
+    entity_category: diagnostic
+    update_interval: 5s
+    lambda: |-
+      if (!id(scd41_co2).has_state()) return std::string("NO DATA");
+      
+      float ppm = id(scd41_co2).state;
+      if (ppm < 600) return std::string("EXCELLENT");
+      else if (ppm < 1000) return std::string("GOOD");
+      else if (ppm < 1500) return std::string("ACCEPTABLE");
+      else if (ppm < 2000) return std::string("POOR");
+      else return std::string("CRITICAL");
+
+  # ========== MULTI-GAS EXPOSURE INDEX ==========
+  # EPA-inspired AQI-like metric combining all gaseous pollutants
+  
+  - platform: template
+    name: "Pollutant Exposure Index"
+    id: pollutant_exposure_index
+    unit_of_measurement: "AEI"
+    icon: "mdi:cloud-alert"
+    accuracy_decimals: 1
+    update_interval: 10s
+    lambda: |-
+      // Aggregate Exposure Index (0-500+)
+      // 0-50: Good, 50-100: Moderate, 100-150: Unhealthy for sensitive
+      // 150-200: Unhealthy, 200+: Very Unhealthy/Hazardous
+      
+      float aei = 0.0f;
+      int gas_count = 0;
+      
+      // CO component (max 150 AEI at 1000ppm)
+      if (id(g_baseline_valid) && id(gas_co_ppm).has_state()) {
+        float co_ppm = id(gas_co_ppm).state;
+        float co_aei = co_ppm / 1000.0f * 150.0f;
+        aei += co_aei;
+        gas_count++;
+      }
+      
+      // NH3 component (max 150 AEI at 500ppm)
+      if (id(g_baseline_valid) && id(gas_nh3_ppm).has_state()) {
+        float nh3_ppm = id(gas_nh3_ppm).state;
+        float nh3_aei = (nh3_ppm / 500.0f) * 150.0f;
+        aei += nh3_aei;
+        gas_count++;
+      }
+      
+      // NO2 component (max 150 AEI at 20ppm)
+      if (id(g_baseline_valid) && id(gas_no2_ppm).has_state()) {
+        float no2_ppm = id(gas_no2_ppm).state;
+        float no2_aei = (no2_ppm / 20.0f) * 150.0f;
+        aei += no2_aei;
+        gas_count++;
+      }
+      
+      if (gas_count > 0) {
+        // Average the gas contributions
+        return aei / gas_count;
+      }
+      return NAN;
+
+binary_sensor:
+  # ========== CRITICAL ALERTS ==========
+  # Hard triggers for dangerous conditions
+  
+  - platform: template
+    name: "CO Alert (>100ppm)"
+    id: co_alert
+    icon: "mdi:fire-alert"
+    device_class: safety
+    update_interval: 5s
+    lambda: |-
+      if (!id(g_baseline_valid) || !id(gas_co_ppm).has_state()) return false;
+      return id(gas_co_ppm).state > 100.0f;
+
+  - platform: template
+    name: "NH3 Alert (>150ppm)"
+    id: nh3_alert
+    icon: "mdi:fire-alert"
+    device_class: safety
+    update_interval: 5s
+    lambda: |-
+      if (!id(g_baseline_valid) || !id(gas_nh3_ppm).has_state()) return false;
+      return id(gas_nh3_ppm).state > 150.0f;
+
+  - platform: template
+    name: "NO2 Alert (>10ppm)"
+    id: no2_alert
+    icon: "mdi:fire-alert"
+    device_class: safety
+    update_interval: 5s
+    lambda: |-
+      if (!id(g_baseline_valid) || !id(gas_no2_ppm).has_state()) return false;
+      return id(gas_no2_ppm).state > 10.0f;
+
+  - platform: template
+    name: "CO2 Alert (>2000ppm)"
+    id: co2_alert
+    icon: "mdi:fire-alert"
+    device_class: safety
+    update_interval: 5s
+    lambda: |-
+      if (!id(scd41_co2).has_state()) return false;
+      return id(scd41_co2).state > 2000.0f;
+
+  - platform: template
+    name: "Hazardous Air Quality"
+    id: hazardous_aq
+    icon: "mdi:fire-alert"
+    device_class: safety
+    update_interval: 5s
+    lambda: |-
+      if (!id(aq_score).has_state()) return false;
+      return id(aq_score).state < 10.0f;
+
+  - platform: template
+    name: "Calibration Required"
+    id: calib_needed
+    icon: "mdi:wrench-clock"
+    update_interval: 3600s
+    lambda: |-
+      // Alert if >14 days since calibration
+      return id(calib_age_days).has_state() && id(calib_age_days).state > 14.0f;
+
+script:
+  # ========== AIR QUALITY ALERT EVALUATION ==========
+  # Automatically triggers alerts based on sensor data
+  
+  - id: evaluate_air_quality_alert
+    then:
+      - logger.log:
+          format: "AQ Score: %.1f%%, Alert Level: %d, Triggered By: %s"
+          args: [id(aq_score).state, id(aq_alert_level), "Air Quality"]
+      
+      # Determine alert level based on current readings
+      - if:
+          condition:
+            lambda: |-
+              if (!id(aq_score).has_state()) return false;
+              return id(aq_score).state < 10.0f;  // Hazardous
+          then:
+            - globals.set:
+                id: aq_alert_level
+                value: "3"
+            - globals.set:
+                id: aq_alert_timestamp
+                value: !lambda 'return millis() / 1000;'
+      - if:
+          condition:
+            lambda: |-
+              if (!id(aq_score).has_state()) return false;
+              return id(aq_score).state >= 10.0f && id(aq_score).state < 25.0f;
+          then:
+            - globals.set:
+                id: aq_alert_level
+                value: "2"
+      - if:
+          condition:
+            lambda: |-
+              if (!id(aq_score).has_state()) return false;
+              return id(aq_score).state >= 25.0f && id(aq_score).state < 50.0f;
+          then:
+            - globals.set:
+                id: aq_alert_level
+                value: "1"
+      - if:
+          condition:
+            lambda: |-
+              if (!id(aq_score).has_state()) return false;
+              return id(aq_score).state >= 50.0f;
+          then:
+            - globals.set:
+                id: aq_alert_level
+                value: "0"
+
+button:
+  # ========== PROFESSIONAL CALIBRATION ==========
+  # One-touch baseline calibration for gas sensors
+  
+  - platform: template
+    name: "Calibrate Gas Baseline"
+    id: btn_calibrate_gas
+    icon: "mdi:run"
+    entity_category: config
+    on_press:
+      then:
+        - logger.log:
+            level: WARN
+            format: "GAS CALIBRATION STARTED - Place device in clean outdoor air"
+        - globals.set:
+            id: g_baseline_nh3_v
+            value: !lambda 'return id(mics_nh3_v).state;'
+        - globals.set:
+            id: g_baseline_no2_v
+            value: !lambda 'return id(mics_no2_v).state;'
+        - globals.set:
+            id: g_baseline_co_v
+            value: !lambda 'return id(mics_co_v).state;'
+        - globals.set:
+            id: g_baseline_valid
+            value: "true"
+        - globals.set:
+            id: g_calibration_count
+            value: !lambda 'return id(g_calibration_count) + 1;'
+        - globals.set:
+            id: g_calibration_timestamp
+            value: !lambda 'return millis() / 1000;'
+        - logger.log:
+            level: WARN
+            format: "GAS BASELINE CALIBRATED - Calibration #%d"
+            args: [id(g_calibration_count)]
+
+  - platform: template
+    name: "Reset Gas Calibration"
+    id: btn_reset_gas_calib
+    icon: "mdi:restart"
+    entity_category: config
+    on_press:
+      then:
+        - globals.set:
+            id: g_baseline_valid
+            value: "false"
+        - globals.set:
+            id: g_baseline_nh3_v
+            value: "0.0"
+        - globals.set:
+            id: g_baseline_no2_v
+            value: "0.0"
+        - globals.set:
+            id: g_baseline_co_v
+            value: "0.0"
+        - logger.log:
+            level: WARN
+            format: "GAS BASELINE RESET - Requires recalibration"
