@@ -534,3 +534,465 @@ button:
         - logger.log:
             level: WARN
             format: "GAS BASELINE RESET - Requires recalibration"
+
+# ============================================================================
+# DISPLAY CONFIGURATION - UEAIDISP 5" 800×480
+# ============================================================================
+
+spi:
+  - id: spi_bus
+    clk_pin: GPIO14
+    mosi_pin: GPIO13
+    miso_pin: GPIO12
+
+display:
+  - platform: st7262
+    id: display_component
+    spi_id: spi_bus
+    cs_pin: GPIO15
+    dc_pin: GPIO2
+    reset_pin: GPIO1
+    rotation: 0
+    dimensions:
+      width: 800
+      height: 480
+    color_order: rgb
+    invert_colors: false
+    update_interval: 1s
+    auto_clear_enabled: true
+
+# ============================================================================
+# TOUCHSCREEN CONFIGURATION (GT911)
+# ============================================================================
+
+touchscreen:
+  - platform: gt911
+    id: touch_screen
+    i2c_id: bus_a
+    interrupt_pin: GPIO3
+    update_interval: 50ms
+
+# ============================================================================
+# LVGL UI CONFIGURATION - V1 THREE-SENSOR DASHBOARD
+# ============================================================================
+
+lvgl:
+  displays:
+    - display_component
+  
+  touchscreens:
+    - touch_screen
+  
+  color_depth: 16
+  bg_color: 0x000000
+  text_font: montserrat_20
+  align: center
+  
+  theme:
+    btn:
+      bg_color: 0x2196F3
+      text_color: 0xFFFFFF
+      pressed:
+        bg_color: 0x1976D2
+  
+  pages:
+    # ========== MAIN DASHBOARD PAGE ==========
+    - id: main_page
+      skip: false
+      widgets:
+        # ----- HEADER BAR -----
+        - obj:
+            id: header_bar
+            x: 0
+            y: 0
+            width: 800
+            height: 60
+            bg_color: 0x1E1E1E
+            border_width: 0
+            widgets:
+              - label:
+                  id: title_label
+                  text: "AIR QUALITY DETECTOR V1"
+                  text_color: 0xFFFFFF
+                  text_font: montserrat_24
+                  align: CENTER
+                  x: 400
+                  y: 30
+              
+              - label:
+                  id: time_label
+                  text: "00:00"
+                  text_color: 0xAAAAAA
+                  text_font: montserrat_16
+                  align: TOP_RIGHT
+                  x: 750
+                  y: 35
+        
+        # ----- MAIN AQ SCORE (CENTER TOP) -----
+        - obj:
+            id: aq_score_container
+            x: 250
+            y: 80
+            width: 300
+            height: 180
+            bg_color: 0x2C2C2C
+            border_width: 2
+            border_color: 0x00FF00
+            radius: 10
+            widgets:
+              - label:
+                  id: aq_score_title
+                  text: "AIR QUALITY"
+                  text_color: 0xFFFFFF
+                  text_font: montserrat_20
+                  align: TOP_MID
+                  x: 150
+                  y: 15
+              
+              - label:
+                  id: aq_score_value
+                  text: "--"
+                  text_color: 0x00FF00
+                  text_font: montserrat_48
+                  align: CENTER
+                  x: 150
+                  y: 90
+              
+              - label:
+                  id: aq_score_unit
+                  text: "%"
+                  text_color: 0xAAAAAA
+                  text_font: montserrat_20
+                  align: CENTER
+                  x: 210
+                  y: 90
+              
+              - label:
+                  id: aq_status_label
+                  text: "EXCELLENT"
+                  text_color: 0x00FF00
+                  text_font: montserrat_20
+                  align: BOTTOM_MID
+                  x: 150
+                  y: 160
+        
+        # ----- CO2 READING (TOP LEFT) -----
+        - obj:
+            id: co2_container
+            x: 20
+            y: 280
+            width: 180
+            height: 180
+            bg_color: 0x2C2C2C
+            border_width: 2
+            border_color: 0x00FF00
+            radius: 10
+            widgets:
+              - label:
+                  text: "CO₂"
+                  text_color: 0xFFFFFF
+                  text_font: montserrat_20
+                  align: TOP_MID
+                  x: 90
+                  y: 15
+              
+              - label:
+                  id: co2_value
+                  text: "--"
+                  text_color: 0x00FF00
+                  text_font: montserrat_32
+                  align: CENTER
+                  x: 90
+                  y: 90
+              
+              - label:
+                  text: "ppm"
+                  text_color: 0xAAAAAA
+                  text_font: montserrat_16
+                  align: BOTTOM_MID
+                  x: 90
+                  y: 160
+        
+        # ----- GAS MIXTURE READING (CENTER) -----
+        - obj:
+            id: gas_container
+            x: 310
+            y: 280
+            width: 180
+            height: 180
+            bg_color: 0x2C2C2C
+            border_width: 2
+            border_color: 0x00FF00
+            radius: 10
+            widgets:
+              - label:
+                  text: "GASES"
+                  text_color: 0xFFFFFF
+                  text_font: montserrat_20
+                  align: TOP_MID
+                  x: 90
+                  y: 15
+              
+              - label:
+                  id: gas_value
+                  text: "--"
+                  text_color: 0x00FF00
+                  text_font: montserrat_32
+                  align: CENTER
+                  x: 90
+                  y: 60
+              
+              - label:
+                  text: "µV"
+                  text_color: 0xAAAAAA
+                  text_font: montserrat_14
+                  align: CENTER
+                  x: 90
+                  y: 100
+              
+              - label:
+                  id: gas_status
+                  text: "Normal"
+                  text_color: 0x00FF00
+                  text_font: montserrat_14
+                  align: BOTTOM_MID
+                  x: 90
+                  y: 160
+        
+        # ----- VOC/IAQ READING (TOP RIGHT) -----
+        - obj:
+            id: iaq_container
+            x: 600
+            y: 280
+            width: 180
+            height: 180
+            bg_color: 0x2C2C2C
+            border_width: 2
+            border_color: 0x00FF00
+            radius: 10
+            widgets:
+              - label:
+                  text: "VOC"
+                  text_color: 0xFFFFFF
+                  text_font: montserrat_20
+                  align: TOP_MID
+                  x: 90
+                  y: 15
+              
+              - label:
+                  id: iaq_value
+                  text: "--"
+                  text_color: 0x00FF00
+                  text_font: montserrat_32
+                  align: CENTER
+                  x: 90
+                  y: 90
+              
+              - label:
+                  text: "IAQ"
+                  text_color: 0xAAAAAA
+                  text_font: montserrat_16
+                  align: BOTTOM_MID
+                  x: 90
+                  y: 160
+  
+  # ========== LVGL UPDATE LOGIC ==========
+  on_idle:
+    then:
+      # Update AQ Score
+      - lvgl.label.update:
+          id: aq_score_value
+          text: !lambda |-
+            if (id(aq_score).has_state()) {
+              return std::to_string((int)id(aq_score).state);
+            }
+            return std::string("--");
+      
+      - lvgl.label.update:
+          id: aq_status_label
+          text: !lambda |-
+            if (id(aq_score).has_state()) {
+              float score = id(aq_score).state;
+              if (score >= 75) return std::string("EXCELLENT");
+              if (score >= 50) return std::string("GOOD");
+              if (score >= 25) return std::string("FAIR");
+              if (score >= 10) return std::string("POOR");
+              return std::string("HAZARDOUS");
+            }
+            return std::string("NO DATA");
+      
+      # Update AQ Score colors
+      - lvgl.obj.update:
+          id: aq_score_container
+          border_color: !lambda |-
+            if (id(aq_score).has_state()) {
+              float score = id(aq_score).state;
+              if (score >= 75) return 0x00FF00;  // Green
+              if (score >= 50) return 0x8BC34A;  // Light Green
+              if (score >= 25) return 0xFFEB3B;  // Yellow
+              if (score >= 10) return 0xFF9800;  // Orange
+              return 0xFF0000;  // Red
+            }
+            return 0x888888;
+      
+      - lvgl.label.update:
+          id: aq_score_value
+          text_color: !lambda |-
+            if (id(aq_score).has_state()) {
+              float score = id(aq_score).state;
+              if (score >= 75) return 0x00FF00;
+              if (score >= 50) return 0x8BC34A;
+              if (score >= 25) return 0xFFEB3B;
+              if (score >= 10) return 0xFF9800;
+              return 0xFF0000;
+            }
+            return 0x888888;
+      
+      - lvgl.label.update:
+          id: aq_status_label
+          text_color: !lambda |-
+            if (id(aq_score).has_state()) {
+              float score = id(aq_score).state;
+              if (score >= 75) return 0x00FF00;
+              if (score >= 50) return 0x8BC34A;
+              if (score >= 25) return 0xFFEB3B;
+              if (score >= 10) return 0xFF9800;
+              return 0xFF0000;
+            }
+            return 0x888888;
+      
+      # Update CO₂
+      - lvgl.label.update:
+          id: co2_value
+          text: !lambda |-
+            if (id(scd41_co2).has_state()) {
+              return std::to_string((int)id(scd41_co2).state);
+            }
+            return std::string("--");
+      
+      - lvgl.obj.update:
+          id: co2_container
+          border_color: !lambda |-
+            if (id(scd41_co2).has_state()) {
+              float ppm = id(scd41_co2).state;
+              if (ppm < 600) return 0x00FF00;
+              if (ppm < 1000) return 0x8BC34A;
+              if (ppm < 1500) return 0xFFEB3B;
+              if (ppm < 2000) return 0xFF9800;
+              return 0xFF0000;
+            }
+            return 0x888888;
+      
+      - lvgl.label.update:
+          id: co2_value
+          text_color: !lambda |-
+            if (id(scd41_co2).has_state()) {
+              float ppm = id(scd41_co2).state;
+              if (ppm < 600) return 0x00FF00;
+              if (ppm < 1000) return 0x8BC34A;
+              if (ppm < 1500) return 0xFFEB3B;
+              if (ppm < 2000) return 0xFF9800;
+              return 0xFF0000;
+            }
+            return 0x888888;
+      
+      # Update Gas Mixture
+      - lvgl.label.update:
+          id: gas_value
+          text: !lambda |-
+            if (id(mics_co_v).has_state()) {
+              return std::to_string((int)id(mics_co_v).state);
+            }
+            return std::string("--");
+      
+      - lvgl.label.update:
+          id: gas_status
+          text: !lambda |-
+            if (id(mics_gas_alert).has_state()) {
+              return id(mics_gas_alert).state ? std::string("ALERT") : std::string("Normal");
+            }
+            return std::string("--");
+      
+      - lvgl.obj.update:
+          id: gas_container
+          border_color: !lambda |-
+            if (id(mics_co_v).has_state()) {
+              float voltage = id(mics_co_v).state;
+              if (voltage < 0.5) return 0x00FF00;
+              if (voltage < 1.0) return 0x8BC34A;
+              if (voltage < 1.5) return 0xFFEB3B;
+              if (voltage < 2.0) return 0xFF9800;
+              return 0xFF0000;
+            }
+            return 0x888888;
+      
+      - lvgl.label.update:
+          id: gas_value
+          text_color: !lambda |-
+            if (id(mics_co_v).has_state()) {
+              float voltage = id(mics_co_v).state;
+              if (voltage < 0.5) return 0x00FF00;
+              if (voltage < 1.0) return 0x8BC34A;
+              if (voltage < 1.5) return 0xFFEB3B;
+              if (voltage < 2.0) return 0xFF9800;
+              return 0xFF0000;
+            }
+            return 0x888888;
+      
+      - lvgl.label.update:
+          id: gas_status
+          text_color: !lambda |-
+            if (id(mics_co_v).has_state()) {
+              float voltage = id(mics_co_v).state;
+              if (voltage < 0.5) return 0x00FF00;
+              if (voltage < 1.0) return 0x8BC34A;
+              if (voltage < 1.5) return 0xFFEB3B;
+              if (voltage < 2.0) return 0xFF9800;
+              return 0xFF0000;
+            }
+            return 0x888888;
+      
+      # Update VOC/IAQ
+      - lvgl.label.update:
+          id: iaq_value
+          text: !lambda |-
+            if (id(bme680_iaq).has_state()) {
+              return std::to_string((int)id(bme680_iaq).state);
+            }
+            return std::string("--");
+      
+      - lvgl.obj.update:
+          id: iaq_container
+          border_color: !lambda |-
+            if (id(bme680_iaq).has_state()) {
+              float iaq = id(bme680_iaq).state;
+              if (iaq < 50) return 0x00FF00;
+              if (iaq < 150) return 0x8BC34A;
+              if (iaq < 300) return 0xFFEB3B;
+              if (iaq < 400) return 0xFF9800;
+              return 0xFF0000;
+            }
+            return 0x888888;
+      
+      - lvgl.label.update:
+          id: iaq_value
+          text_color: !lambda |-
+            if (id(bme680_iaq).has_state()) {
+              float iaq = id(bme680_iaq).state;
+              if (iaq < 50) return 0x00FF00;
+              if (iaq < 150) return 0x8BC34A;
+              if (iaq < 300) return 0xFFEB3B;
+              if (iaq < 400) return 0xFF9800;
+              return 0xFF0000;
+            }
+            return 0x888888;
+      
+      # Update time
+      - lvgl.label.update:
+          id: time_label
+          text: !lambda |-
+            auto time = id(homeassistant_time).now();
+            if (time.is_valid()) {
+              return time.strftime("%H:%M");
+            }
+            return std::string("--:--");
