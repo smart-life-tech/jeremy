@@ -163,15 +163,15 @@ Professional air quality detection system for:
 **Power:**
 - 10000mAh LiPo (3.7V nominal, 5000mAh per cell)
 - Charge: USB-C (5V/2A recommended)
-- Battery monitoring: GPIO6 (voltage divider 1:2)
-- Charge indicator: GPIO5 (logic input)
+- Battery monitoring: ADS1115 A0 (200k/100k divider, ×3.0 scale)
+- Charging detection: GPIO6 Sensor AD (divider from CN3471 Solar IN)
 - Estimated runtime: 8 hours active (display on)
 
 **I/O Pins:**
 - GPIO8: I2C SDA
 - GPIO9: I2C SCL
-- GPIO6: Battery voltage (ADC)
-- GPIO5: Charge detection
+- GPIO6: Charging detect (Sensor AD, ADC)
+- GPIO5: (reserved)
 - GPIO3: Touchscreen interrupt
 - GPIO14: SPI CLK
 - GPIO13: SPI MOSI
@@ -183,6 +183,13 @@ Professional air quality detection system for:
 **Size:** Approximately 150×100×40mm with battery
 
 ### Dashboard Features
+ 
+**Charging Notes:**
+- Using CN3471 Solar IN pads for 5V input (USB‑C breakout or wireless).
+- CN3471 does not negotiate higher USB‑C voltages; charging remains 5V and slow.
+- Current USB‑C breakout has only VCC/GND/D−/D+ (no CC pins), so no fast charge negotiation.
+- Avoid simple diodes due to voltage drop; consider ideal‑diode or MOSFET OR‑ing in V2.
+- Fast charging is planned for V2.
 
 **Main Page:**
 - **Air Quality Score** (center): 0-100% with dynamic color
@@ -380,12 +387,12 @@ UEAIDISP Display Board
 │     ├─ SCL ──→ GPIO9
 │     ├─ VDD ──→ 5V regulated
 │     ├─ GND ──→ Common GND
-│     └─ A0-A3 ← MiCS-6814 analog outputs
+│     └─ Channels: A0=battery divider, A1=CO, A2=NH3, A3=NO2
 │
 ├─ MiCS-6814 (via ADS1115)
-│  ├─ CO output ──→ ADS1115 A0
-│  ├─ NH3 output ──→ ADS1115 A1
-│  ├─ NO2 output ──→ ADS1115 A2
+│  ├─ CO output ──→ ADS1115 A1
+│  ├─ NH3 output ──→ ADS1115 A2
+│  ├─ NO2 output ──→ ADS1115 A3
 │  ├─ VDD ──→ 5V regulated
 │  └─ GND ──→ Common GND
 │
